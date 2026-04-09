@@ -17,7 +17,7 @@ The LACK ontology is available in two serialisations:
 
 ```
 Prefix:  lack:
-URI:     http://lack.climatesense.kmi.tools#
+URI:     https://purl.net/climatesense/lack/ns#
 ```
 
 ---

@@ -1,10 +1,10 @@
-Prefix: lack: <http://lack.climatesense.kmi.tools#>
+Prefix: lack: <https://purl.net/climatesense/lack/ns#>
 Prefix: owl:  <http://www.w3.org/2002/07/owl#>
 Prefix: rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 Prefix: rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 Prefix: xsd:  <http://www.w3.org/2001/XMLSchema#>
 
-Ontology: <http://lack.climatesense.kmi.tools#>
+Ontology: <https://purl.net/climatesense/lack/ns#>
     Annotations:
         rdfs:label "LACK Ontology"@en,
         rdfs:comment "Lobbying Against Climate science Knowledge — a lightweight ontology for describing relationships between people and organisations relevant to lobbying against climate change awareness and policies."@en

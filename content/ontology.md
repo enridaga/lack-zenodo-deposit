@@ -5,8 +5,12 @@ title: Ontology
 # LACK Ontology
 
 **Prefix:** `lack:`  
-**Namespace:** `http://lack.climatesense.kmi.tools#`  
+**Namespace:** `https://purl.net/climatesense/lack/ns#`  
 **Status:** Draft
+
+```turtle
+@prefix lack: <https://purl.net/climatesense/lack/ns#> .
+```
 
 Download the formal files: [Turtle (.ttl)]({{ base_url }}/lack-ontology.ttl) · [Manchester Syntax (.omn)]({{ base_url }}/lack-ontology.omn)
 
@@ -289,22 +293,26 @@ When the source annotation is `when` (a point in time rather than an interval), 
 ### Example
 
 ```turtle
+@prefix lack: <https://purl.net/climatesense/lack/ns#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
 # Base triple always asserted
-:Alice lack:employedBy :Org .
+lack-entity:alice lack:employedBy lack-entity:org .
 
 # Reified statement with interval
-:stmt1 a rdf:Statement ;
-    rdf:subject   :Alice ;
+[] a rdf:Statement ;
+    rdf:subject   lack-entity:alice ;
     rdf:predicate lack:employedBy ;
-    rdf:object    :Org ;
+    rdf:object    lack-entity:org ;
     lack:since    "2010"^^xsd:gYear ;
     lack:until    "2020"^^xsd:gYear .
 
 # Reified statement with point-in-time (when → since = until)
-:stmt2 a rdf:Statement ;
-    rdf:subject   :Alice ;
+[] a rdf:Statement ;
+    rdf:subject   lack-entity:alice ;
     rdf:predicate lack:memberOf ;
-    rdf:object    :BoardX ;
+    rdf:object    lack-entity:boardX ;
     lack:since    "2015"^^xsd:gYear ;
     lack:until    "2015"^^xsd:gYear .
 ```
@@ -352,3 +360,34 @@ A mapping exercise to schema.org has been conducted. Key findings:
 - **Heavy reliance on `schema:memberOf + roleName`** — schema.org has no dedicated properties for most named organisational roles (CEO, chair, treasurer, VP, etc.). The recommended pattern is to use `schema:memberOf` with a `schema:Role` wrapper and a `roleName` literal to capture the specific title.
 - **Inverse direction mismatches** — many relations (funded, published, created, employed) are naturally expressed person→org in LACK, but schema.org models the predicate on the receiving entity (e.g. `schema:funder` is a property of the funded thing).
 - **No-match cases** — highly specific operational or contractual relations (lobbied for, conducted public relations for, created a crisis plan for, launched, incorporated) have no schema.org equivalent and are better represented with custom predicates in a domain-specific vocabulary such as LACK.
+
+---
+
+## Competency Questions
+
+The following competency questions were used to drive the design of the ontology and the knowledge extraction process, and were refined based on data quality assessment after extraction. They represent the key questions that LACK is designed to answer.
+
+### Transparency and Disclosure
+
+- **CQ1:** Which persons and organisations are involved in lobbying against climate science or policy?
+- **CQ2:** Which organisations fund a given person or organisation, and what is the evidence for each funding relationship?
+- **CQ3:** Which persons are members of a given organisation, and during which period?
+- **CQ4:** Who are the leaders of a given organisation, and when did they hold that role?
+- **CQ5:** Which organisations has a given person been employed by, and in what time periods?
+
+### Network Structure
+
+- **CQ6:** Which organisations are partners of a given organisation?
+- **CQ7:** Which organisations were founded by a given person or organisation?
+- **CQ8:** Which organisations is a given organisation derived from, or has acquired?
+- **CQ9:** Which persons or organisations are associated with a given entity (direct and indirect connections)?
+
+### Temporal Reasoning
+
+- **CQ10:** Which relationships involving a given entity were active during a specific time interval?
+- **CQ11:** Which organisations were active during a given period?
+
+### Identity and Deduplication
+
+- **CQ12:** Which entities in the graph refer to the same real-world person or organisation?
+

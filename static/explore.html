@@ -496,7 +496,7 @@ code { font-family: monospace; background: #f0ede3; padding: 0.1em 0.35em; borde
 // CONSTANTS & PREFIXES
 // ══════════════════════════════════════════════════════════
 
-const PREFIXES = `PREFIX lack:        <http://lack.climatesense.kmi.tools/ontology/>
+const PREFIXES = `PREFIX lack:        <https://purl.net/climatesense/lack/ns#>
 PREFIX lack-entity: <http://lack.climatesense.kmi.tools/entity/>
 PREFIX lack-type:   <http://lack.climatesense.kmi.tools/type/>
 PREFIX owl:         <http://www.w3.org/2002/07/owl#>
@@ -534,7 +534,7 @@ ORDER BY DESC(?count)`
 SELECT ?predicate (COUNT(*) AS ?count)
 WHERE {
   ?s ?predicate ?o .
-  FILTER(STRSTARTS(STR(?predicate), "http://lack.climatesense.kmi.tools/ontology/"))
+  FILTER(STRSTARTS(STR(?predicate), "https://purl.net/climatesense/lack/ns#"))
   FILTER(?predicate != lack:Person && ?predicate != lack:Collective)
 }
 GROUP BY ?predicate
@@ -770,7 +770,7 @@ function sparqlVal(binding) {
 function shortIRI(iri) {
   if (!iri) return '';
   return iri
-    .replace('http://lack.climatesense.kmi.tools/ontology/', 'lack:')
+    .replace('https://purl.net/climatesense/lack/ns#', 'lack:')
     .replace('http://lack.climatesense.kmi.tools/entity/', 'lack-entity:…')
     .replace('http://lack.climatesense.kmi.tools/type/', 'lack-type:')
     .replace('http://www.w3.org/2002/07/owl#', 'owl:')
@@ -1006,7 +1006,6 @@ ORDER BY DESC(?count)`);
 }
 
 async function loadTopConnected() {
-  // Use MIN(?label) grouped by entity to guarantee one row per entity
   const r = await sparqlQuery(`${PREFIXES}
 SELECT ?entity (MIN(?label) AS ?label) (COUNT(*) AS ?degree)
 WHERE {
@@ -1091,7 +1090,6 @@ async function selectType(iri, name) {
   const panel = document.getElementById('type-entities-panel');
   panel.innerHTML = `<div class="msg info"><span class="spinner"></span>Loading ${name} entities…</div>`;
 
-  // Use MIN(?label), MIN(?wd), MIN(?source) grouped by ?entity to get one row per entity
   const r = await sparqlQuery(`${PREFIXES}
 SELECT ?entity (MIN(?label) AS ?label) (MIN(?wd) AS ?wd) (MIN(?source) AS ?source)
 WHERE {
@@ -1147,7 +1145,6 @@ async function entitySearch() {
   const resultsEl = document.getElementById('entity-search-results');
   resultsEl.innerHTML = '<span class="spinner"></span> Searching…';
 
-  // GROUP BY ?entity with MIN(?label) and MIN(?typeIRI) — one row per entity
   const r = await sparqlQuery(`${PREFIXES}
 SELECT ?entity (MIN(?label) AS ?label) (MIN(?typeIRI) AS ?typeIRI)
 WHERE {
@@ -1216,7 +1213,6 @@ SELECT ?p ?o WHERE {
 }
 ORDER BY ?p`);
 
-    // Outgoing: one row per (pred, target) pair — target has a single IRI so no duplication issue
     const rOut = await sparqlQuery(`${PREFIXES}
 SELECT ?pred ?target (MIN(?targetLabel) AS ?targetLabel) (MIN(?src) AS ?src)
        (MIN(?since) AS ?since) (MIN(?until) AS ?until)
@@ -1239,7 +1235,6 @@ GROUP BY ?pred ?target
 ORDER BY ?pred ?targetLabel
 LIMIT 200`);
 
-    // Incoming: one row per (pred, source) pair
     const rIn = await sparqlQuery(`${PREFIXES}
 SELECT ?pred ?source (MIN(?sourceLabel) AS ?sourceLabel) (MIN(?src) AS ?src)
 WHERE {

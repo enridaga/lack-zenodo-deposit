@@ -1,7 +1,7 @@
 # LACK Ontology
 
 **Prefix:** `lack:`
-**Namespace:** `http://lack.climatesense.kmi.tools#`
+**Namespace:** `https://purl.net/climatesense/lack/ns#`
 **Status:** Draft
 
 ---

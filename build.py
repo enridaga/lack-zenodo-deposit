@@ -66,10 +66,10 @@ def parse_kg_stats(kg_path):
     wikidata_linked = 0
 
     re_type = re.compile(r'rdf:type\s+lack-type:(\w+)')
-    re_person = re.compile(r'rdf:type\s+lack:Person')
-    re_relation = re.compile(r'\black:(' + '|'.join(LACK_RELATIONS) + r')\b')
+    re_person = re.compile(r'rdf:type\s+lack:Person|rdf:type\s+<https://purl\.net/climatesense/lack/ns#Person>')
+    re_relation = re.compile(r'\b(?:lack:)(' + '|'.join(LACK_RELATIONS) + r')\b')
     re_see_also = re.compile(r'rdfs:seeAlso\s+"(https?://[^"]+)"')
-    re_year = re.compile(r'lack:(?:since|until|activeSince|activeUntil)\s+"(\d{4})"')
+    re_year = re.compile(r'lack:(?:since|until|activeSince|activeUntil)\s+"(\d{4})"|<https://purl\.net/climatesense/lack/ns#(?:since|until|activeSince|activeUntil)>\s+"(\d{4})"|"(\d{4})"\^\^xsd:gYear')
     re_wikidata = re.compile(r'owl:sameAs\s+<https://www\.wikidata\.org/entity/')
     entity_iris = set()
 
@@ -101,9 +101,11 @@ def parse_kg_stats(kg_path):
             source_counts["Other"] += 1
 
     for m in re_year.finditer(content):
-        y = int(m.group(1))
-        if 1900 <= y <= 2030:
-            year_counts[y] += 1
+        raw = m.group(1) or m.group(2) or m.group(3)
+        if raw:
+            y = int(raw)
+            if 1900 <= y <= 2030:
+                year_counts[y] += 1
 
     total_relations = sum(relation_counts.values())
 

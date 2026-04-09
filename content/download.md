@@ -24,11 +24,11 @@ URI:     https://purl.net/climatesense/lack/ns#
 
 ## Knowledge Graph Data
 
-The LACK knowledge graph is currently under development. An early release of the data is available for download below. A SPARQL endpoint and full data dump will be published here when the knowledge graph is ready for release.
+The LACK knowledge graph v1.0 (released 9 April 2026) is available for download. It contains 38,584 entities and 264,516 triples (65,992 asserted + 174,354 inferred).
 
 | File | Format | Description |
 |---|---|---|
-| [KG.ttl]({{ base_url }}/KG.ttl) | Turtle (RDF) | Knowledge graph — early release |
+| [KG.ttl]({{ base_url }}/KG.ttl) | Turtle (RDF) | Knowledge graph v1.0 — asserted + inferred triples |
 
 Check the [GitHub repository](https://github.com/climatesense-project/lack) for updates.
 

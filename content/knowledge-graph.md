@@ -4,11 +4,29 @@ title: Knowledge Graph
 
 # The LACK Knowledge Graph
 
-The LACK knowledge graph is constructed through a pipeline of relation extraction, entity linking, and Wikidata enrichment, applied to a corpus of investigative journalism sources covering climate lobbying.
+The LACK knowledge graph (v1.0, released 9 April 2026) is constructed through a three-phase pipeline of ontology alignment, entity URI generation, and relation graph construction, applied to relation extraction datasets from two investigative journalism sources covering climate lobbying.
 
 ---
 
 ## KG at a Glance
+
+### Entities
+
+| | Count |
+|---|---|
+| **Total entities** | **38,584** |
+| Persons (`lack:Person`) | 16,905 |
+| Collectives (`lack:Collective`) | 21,679 |
+| Wikidata links (`owl:sameAs`) | 13,133 |
+| DBpedia links | 13,389 |
+
+### Relations
+
+| | Count |
+|---|---|
+| **Asserted (extracted)** | **65,992** |
+| **Inferred (entailed)** | **174,354** |
+| **Total after inferencing** | **264,516** |
 
 {{ stats_dashboard }}
 
@@ -20,23 +38,25 @@ Relationships between persons and organisations are extracted automatically from
 
 ### Relation types extracted
 
-| Source type | Relation | Target type |
-|---|---|---|
-| Person | contributed to | Organisation |
-| Person or Organisation | is a member of | Organisation |
-| Person | is employed by | Organisation |
-| Person | is director of | Organisation |
-| Person | is president of | Organisation |
-| Organisation | same as | Organisation |
-| Organisation | has partner | Organisation |
-| Organisation | is associated with | Organisation |
-| Organisation | sponsored | Person or Organisation |
-| Organisation | was funded by | Person or Organisation |
-| Organisation | is derived from | Organisation |
-| Organisation | active since | Year |
-| Organisation | active until | Year |
+| Relation | Count |
+|---|---|
+| `lack:memberOf` | 15,939 |
+| `lack:employedBy` | 9,507 |
+| `lack:leadsAt` | 8,755 |
+| `lack:contributedTo` | 8,403 |
+| `lack:fundedBy` | 6,495 |
+| `lack:hasPartner` | 4,582 |
+| `lack:associatedWith` | 4,315 |
+| `lack:sponsored` | 4,047 |
+| `lack:derivedFrom` | 3,654 |
+| `lack:activeSince` | 133 |
+| `lack:founded` | 74 |
+| `lack:hasMember` | 39 |
+| `lack:acquired` | 37 |
+| `lack:organised` | 12 |
+| **Total** | **65,992** |
 
-All relations can optionally carry **temporal annotations** (`since`, `until`, or `when`), represented via RDF reification.
+All relations can optionally carry **temporal annotations** (`since`, `until`), represented via RDF reification on the `rdf:Statement` node. The `activeSince` property attaches a temporal bound directly to an entity rather than a relation.
 
 ### Evaluation
 
@@ -54,14 +74,37 @@ Ongoing work includes error analysis, ontology refinement, and evaluation on Lob
 
 ## Entity Linking
 
-Entities extracted from text are linked to canonical identifiers in Wikidata, enabling cross-source deduplication and enrichment.
+Entities extracted from text are linked to canonical identifiers in Wikidata and DBpedia, enabling cross-source deduplication and enrichment. Entity linking is complete for v1.0.
 
-Two methods have been implemented and compared:
+Two methods were implemented and compared:
 
 - **Gemini in-context** — direct linking using a large language model
-- **Multi-step workflow** — Wikidata search followed by LLM verification (using Groq + Llama 3.3 70B), including web search for disambiguation
+- **Multi-step workflow** — Wikidata search followed by LLM verification (Groq + Llama 3.3 70B), including web search for disambiguation
 
-The multi-step workflow shows better performance in preliminary evaluation. A gold standard is being prepared for formal evaluation. Entity linking over the full corpus is expected to complete shortly.
+The multi-step workflow was selected for production. Coverage in the current release:
+
+| | Count | % of entities |
+|---|---|---|
+| Wikidata links | 13,133 | 34% |
+| DBpedia links | 13,389 | 35% |
+| Unlinked entities | ~12,062 | 31% |
+
+---
+
+## Inferencing
+
+After the asserted graph is constructed, OWL inferencing is applied using the LACK ontology to materialise:
+
+- **Inverse properties** — e.g. every `lack:employedBy` triple generates a `lack:hasEmployee` triple; every `lack:memberOf` generates `lack:hasMember`
+- **`lack:associatedWith` entailments** — as the top-level superproperty, it is entailed by all other relation types
+
+This adds 174,354 triples, bringing the total graph to **264,516 triples**.
+
+| | Count |
+|---|---|
+| Asserted triples | 65,992 |
+| Inferred triples | 174,354 |
+| **Total** | **264,516** |
 
 ---
 
@@ -73,10 +116,15 @@ Linked entities can be enriched with information from Wikidata, including additi
 
 ## Roadmap
 
-- [ ] Relation extraction error analysis and ontology refinement
-- [ ] Entity linking gold standard evaluation
-- [ ] Full-corpus entity linking completion
+- [x] Relation extraction (Desmog + LobbyMap/InfluenceMap)
+- [x] Ontology alignment and relation mapping
+- [x] Entity URI generation (SHA1-based, stable IRIs)
+- [x] Entity linking (Wikidata + DBpedia, Groq Llama 3.3 70B)
+- [x] Knowledge graph construction (v1.0, 9 April 2026)
+- [x] OWL inferencing
+- [x] KG.ttl published for download
+- [ ] Formal entity linking evaluation (gold standard)
+- [ ] Relation extraction error analysis
 - [ ] Desmog claim clustering (pairwise similarity)
-- [ ] Card categorisation
-- [ ] Wikidata enrichment integration
-- [ ] Knowledge graph publication and SPARQL endpoint
+- [ ] SPARQL endpoint (public)
+- [ ] KG v2.0 with additional sources

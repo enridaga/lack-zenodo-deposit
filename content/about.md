@@ -50,4 +50,4 @@ Additional candidate sources under consideration include: SourceWatch, the Clima
 
 ## Status
 
-LACK is an active research project. Current work includes relation extraction error analysis, ontology refinement, entity linking evaluation, and Wikidata enrichment. The project is targeting a resource paper submission to [ISWC 2026](https://iswc2026.semanticweb.org/).
+LACK is an active research project. Version 1.0 of the knowledge graph was released on 9 April 2026, comprising 38,584 entities and 65,992 asserted relations (264,516 after inferencing). The project is targeting a resource paper submission to [ISWC 2026](https://iswc2026.semanticweb.org/).

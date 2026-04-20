@@ -14,19 +14,19 @@ The LACK knowledge graph (v1.0, released 9 April 2026) is constructed through a 
 
 | | Count |
 |---|---|
-| **Total entities** | **38,584** |
-| Persons (`lack:Person`) | 16,905 |
-| Collectives (`lack:Collective`) | 21,679 |
-| Wikidata links (`owl:sameAs`) | 13,133 |
-| DBpedia links | 13,389 |
+| **Total entities** | **{{ kg_total_entities }}** |
+| Persons (`lack:Person`) | {{ kg_total_persons }} |
+| Collectives (`lack:Collective`) | {{ kg_total_collectives }} |
+| Wikidata links (`owl:sameAs`) | {{ kg_wikidata_links }} |
+| DBpedia links | {{ kg_dbpedia_links }} |
 
 ### Relations
 
 | | Count |
 |---|---|
-| **Asserted (extracted)** | **65,992** |
-| **Inferred (entailed)** | **174,354** |
-| **Total after inferencing** | **264,516** |
+| **Asserted (extracted)** | **{{ kg_asserted }}** |
+| **Inferred (entailed)** | **{{ kg_inferred }}** |
+| **Total after inferencing** | **{{ kg_total }}** |
 
 {{ stats_dashboard }}
 
@@ -40,21 +40,21 @@ Relationships between persons and organisations are extracted automatically from
 
 | Relation | Count |
 |---|---|
-| `lack:memberOf` | 15,939 |
-| `lack:employedBy` | 9,507 |
-| `lack:leadsAt` | 8,755 |
-| `lack:contributedTo` | 8,403 |
-| `lack:fundedBy` | 6,495 |
-| `lack:hasPartner` | 4,582 |
-| `lack:associatedWith` | 4,315 |
-| `lack:sponsored` | 4,047 |
-| `lack:derivedFrom` | 3,654 |
-| `lack:activeSince` | 133 |
-| `lack:founded` | 74 |
-| `lack:hasMember` | 39 |
-| `lack:acquired` | 37 |
-| `lack:organised` | 12 |
-| **Total** | **65,992** |
+| `lack:memberOf` | {{ kg_rel_memberOf }} |
+| `lack:employedBy` | {{ kg_rel_employedBy }} |
+| `lack:leadsAt` | {{ kg_rel_leadsAt }} |
+| `lack:contributedTo` | {{ kg_rel_contributedTo }} |
+| `lack:fundedBy` | {{ kg_rel_fundedBy }} |
+| `lack:hasPartner` | {{ kg_rel_hasPartner }} |
+| `lack:associatedWith` | {{ kg_rel_associatedWith }} |
+| `lack:sponsored` | {{ kg_rel_sponsored }} |
+| `lack:derivedFrom` | {{ kg_rel_derivedFrom }} |
+| `lack:activeSince` | {{ kg_rel_activeSince }} |
+| `lack:founded` | {{ kg_rel_founded }} |
+| `lack:hasMember` | {{ kg_rel_hasMember }} |
+| `lack:acquired` | {{ kg_rel_acquired }} |
+| `lack:organised` | {{ kg_rel_organised }} |
+| **Total** | **{{ kg_asserted }}** |
 
 All relations can optionally carry **temporal annotations** (`since`, `until`), represented via RDF reification on the `rdf:Statement` node. The `activeSince` property attaches a temporal bound directly to an entity rather than a relation.
 
@@ -85,9 +85,9 @@ The multi-step workflow was selected for production. Coverage in the current rel
 
 | | Count | % of entities |
 |---|---|---|
-| Wikidata links | 13,133 | 34% |
-| DBpedia links | 13,389 | 35% |
-| Unlinked entities | ~12,062 | 31% |
+| Wikidata links | {{ kg_wikidata_links }} | {{ kg_wikidata_pct }} |
+| DBpedia links | {{ kg_dbpedia_links }} | {{ kg_dbpedia_pct }} |
+| Unlinked entities | {{ kg_unlinked }} | {{ kg_unlinked_pct }} |
 
 ---
 
@@ -98,13 +98,13 @@ After the asserted graph is constructed, OWL inferencing is applied using the LA
 - **Inverse properties** — e.g. every `lack:employedBy` triple generates a `lack:hasEmployee` triple; every `lack:memberOf` generates `lack:hasMember`
 - **`lack:associatedWith` entailments** — as the top-level superproperty, it is entailed by all other relation types
 
-This adds 174,354 triples, bringing the total graph to **264,516 triples**.
+This adds {{ kg_inferred }} triples, bringing the total graph to **{{ kg_total }} triples**.
 
 | | Count |
 |---|---|
-| Asserted triples | 65,992 |
-| Inferred triples | 174,354 |
-| **Total** | **264,516** |
+| Asserted triples | {{ kg_asserted_inf }} |
+| Inferred triples | {{ kg_inferred_inf }} |
+| **Total** | **{{ kg_total_inf }}** |
 
 ---
 
@@ -124,7 +124,7 @@ Linked entities can be enriched with information from Wikidata, including additi
 - [x] OWL inferencing
 - [x] KG.ttl published for download
 - [x] SPARQL endpoint live (`sparql.climatesense.kmi.tools`, powered by QLever)
-- [ ] Formal entity linking evaluation (gold standard)
+<!-- - [ ] Formal entity linking evaluation (gold standard)
 - [ ] Relation extraction error analysis
 - [ ] Desmog claim clustering (pairwise similarity)
-- [ ] KG v2.0 with additional sources
+- [ ] KG v2.0 with additional sources -->

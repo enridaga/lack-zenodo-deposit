@@ -5,7 +5,7 @@ build.py — LACK Knowledge Graph static site builder.
 Usage:
     python build.py
 
-Reads:  config.yaml, content/*.md, templates/base.html, static/, *.ttl, *.omn, KG.ttl
+Reads:  config.yaml, content/*.md, templates/base.html, static/, *.ttl, *.omn, KGSTATS.md
 Writes: _site/
 """
 
@@ -27,6 +27,7 @@ TEMPLATE_FILE = os.path.join(ROOT, "templates", "base.html")
 CONFIG_FILE = os.path.join(ROOT, "config.yaml")
 OUTPUT_DIR = os.path.join(ROOT, "_site")
 KG_FILE = os.path.join(ROOT, "KG.ttl")
+KGSTATS_FILE = os.path.join(ROOT, "KGSTATS.md")
 
 # Extra files to copy verbatim into _site root
 VERBATIM_FILES = ["lack-ontology.ttl", "lack-ontology.omn", "KG.ttl"]
@@ -47,7 +48,148 @@ LACK_RELATIONS = [
     "organised", "wasOrganisedBy",
 ]
 
-# ── KG parsing ─────────────────────────────────────────────────────────────────
+# ── KGSTATS parsing ────────────────────────────────────────────────────────────
+
+def parse_kgstats(path):
+    """
+    Parse KGSTATS.md and return a flat dict of kg_* placeholder values
+    for use in content/knowledge-graph.md substitution.
+    """
+    if not os.path.exists(path):
+        print(f"  WARNING: {path} not found — KG placeholders will not be substituted.")
+        return {}
+
+    print("  Parsing KGSTATS.md...")
+
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+
+    # ── Split into sections ────────────────────────────────────────────────────
+    before = _extract_section(text, "BEFORE INFERENCING")
+    inferred = _extract_section(text, "INFERRED")
+    after = _extract_section(text, "AFTER INFERENCING")
+
+    # ── Entity counts ──────────────────────────────────────────────────────────
+    total_entities = _first_int(before, r"^(\d+)$")
+    entity_links = _parse_csv_block(before, "type,count,wikidata,dbpedia")
+
+    persons_row    = _row_by_key(entity_links, "lack/ns#Person")
+    collectives_row = _row_by_key(entity_links, "lack/ns#Collective")
+
+    total_persons     = int(persons_row["count"])     if persons_row else 0
+    total_collectives = int(collectives_row["count"]) if collectives_row else 0
+    wikidata_persons  = int(persons_row["wikidata"])  if persons_row else 0
+    wikidata_collectives = int(collectives_row["wikidata"]) if collectives_row else 0
+    dbpedia_persons   = int(persons_row["dbpedia"])   if persons_row else 0
+    dbpedia_collectives = int(collectives_row["dbpedia"]) if collectives_row else 0
+
+    wikidata_total = wikidata_persons + wikidata_collectives
+    dbpedia_total  = dbpedia_persons  + dbpedia_collectives
+    unlinked       = total_entities - wikidata_total
+
+    # ── Relation counts (asserted / inferred / total) ──────────────────────────
+    asserted_total = _first_int(before, r"^(\d+)$", skip=1)   # second bare integer
+    inferred_total = _first_int(inferred, r"^(\d+)$", skip=1)
+    after_total    = _first_int(after, r"^(\d+)$", skip=1)
+
+    # ── Asserted relation breakdown ────────────────────────────────────────────
+    rel_rows = _parse_csv_block(before, "relation,count")
+    rel_map  = {r["relation"].split("#")[-1]: int(r["count"]) for r in rel_rows}
+
+    # ── Percentages ───────────────────────────────────────────────────────────
+    def pct(n, total):
+        return f"{round(n / total * 100)}%" if total else "n/a"
+
+    placeholders = {
+        # Entity glance table
+        "kg_total_entities":   f"{total_entities:,}",
+        "kg_total_persons":    f"{total_persons:,}",
+        "kg_total_collectives":f"{total_collectives:,}",
+        "kg_wikidata_links":   f"{wikidata_total:,}",
+        "kg_dbpedia_links":    f"{dbpedia_total:,}",
+        # Relation glance table
+        "kg_asserted":         f"{asserted_total:,}",
+        "kg_inferred":         f"{inferred_total:,}",
+        "kg_total":            f"{after_total:,}",
+        # Entity linking section
+        "kg_wikidata_pct":     pct(wikidata_total, total_entities),
+        "kg_dbpedia_pct":      pct(dbpedia_total, total_entities),
+        "kg_unlinked":         f"{unlinked:,}",
+        "kg_unlinked_pct":     pct(unlinked, total_entities),
+        # Relation breakdown table — one key per predicate
+        **{f"kg_rel_{k}": f"{v:,}" for k, v in rel_map.items()},
+        # Inferencing section totals (same values, different placeholders for clarity)
+        "kg_asserted_inf":     f"{asserted_total:,}",
+        "kg_inferred_inf":     f"{inferred_total:,}",
+        "kg_total_inf":        f"{after_total:,}",
+    }
+
+    print(f"    Entities: {total_entities:,}  Asserted: {asserted_total:,}  "
+          f"Inferred: {inferred_total:,}  Total: {after_total:,}")
+    return placeholders
+
+
+# ── KGSTATS helpers ────────────────────────────────────────────────────────────
+
+def _extract_section(text, heading):
+    """Return the text between ### <heading> and the next ### (or end of file)."""
+    pattern = re.compile(
+        r"###\s+" + re.escape(heading) + r".*?\n(.*?)(?=\n###|\Z)", re.DOTALL | re.IGNORECASE
+    )
+    m = pattern.search(text)
+    return m.group(1) if m else ""
+
+
+def _first_int(text, pattern, skip=0):
+    """Return the (skip+1)-th match of pattern as int, or 0."""
+    matches = re.findall(pattern, text, re.MULTILINE)
+    try:
+        return int(matches[skip])
+    except (IndexError, ValueError):
+        return 0
+
+
+def _parse_csv_block(text, header):
+    """
+    Find the CSV block starting with <header> and parse it into
+    a list of dicts keyed by column name.
+    """
+    lines = text.splitlines()
+    rows = []
+    in_block = False
+    keys = []
+    for line in lines:
+        line = line.strip()
+        if line == header:
+            keys = header.split(",")
+            in_block = True
+            continue
+        if in_block:
+            if not line or line.startswith("#"):
+                break
+            parts = line.split(",")
+            if len(parts) == len(keys):
+                rows.append(dict(zip(keys, parts)))
+    return rows
+
+
+def _row_by_key(rows, key_fragment):
+    """Return the first row whose first-column value contains key_fragment."""
+    for row in rows:
+        if key_fragment in list(row.values())[0]:
+            return row
+    return None
+
+
+def apply_kg_placeholders(text, placeholders):
+    """Replace all {{ kg_* }} tokens in text with values from placeholders dict."""
+    def replacer(m):
+        key = m.group(1).strip()
+        return placeholders.get(key, m.group(0))  # leave unknown tokens as-is
+    return re.sub(r"\{\{\s*(kg_\w+)\s*\}\}", replacer, text)
+
+
+# ── KG parsing (regex, for stats dashboard) ────────────────────────────────────
 
 def parse_kg_stats(kg_path):
     """
@@ -321,6 +463,8 @@ def main():
 
     # Parse KG stats
     kg_stats = parse_kg_stats(KG_FILE)
+    # Parse KGSTATS.md for knowledge-graph.md placeholder substitution
+    kg_placeholders = parse_kgstats(KGSTATS_FILE)
     stats_html = render_stats_html(kg_stats)
 
     # Clean and recreate output directory
@@ -362,6 +506,9 @@ def main():
             raw = f.read()
 
         meta, body = parse_frontmatter(raw)
+        # Apply KG placeholders before markdown rendering
+        if md_file == "knowledge-graph.md":
+            body = apply_kg_placeholders(body, kg_placeholders)
         page_title = meta.get("title", item["label"])
 
         content_html = md_lib.markdown(body, extensions=md_extensions)

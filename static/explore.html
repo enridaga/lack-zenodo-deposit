@@ -1015,7 +1015,7 @@ async function loadTypes() {
   const r = await sparqlQuery(`${PREFIXES}
 SELECT ?type (COUNT(DISTINCT ?e) AS ?count) WHERE {
 ?e rdf:type ?type .
-FILTER(STRSTARTS(STR(?type), STR(lack:)))
+FILTER(STRSTARTS(STR(?type), STR(lack-type:)))
 }
 GROUP BY ?type
 ORDER BY DESC(?count)`);

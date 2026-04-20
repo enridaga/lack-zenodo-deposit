@@ -471,6 +471,7 @@ code { font-family: monospace; background: #f0ede3; padding: 0.1em 0.35em; borde
 
 const PREFIXES = `PREFIX lack:        <https://purl.net/climatesense/lack/ns#>
 PREFIX lack-entity: <https://purl.net/climatesense/lack/entity/>
+PREFIX entity: <https://purl.net/climatesense/lack/entity/>
 PREFIX lack-type:   <https://purl.net/climatesense/lack/type/>
 PREFIX owl:         <http://www.w3.org/2002/07/owl#>
 PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -495,7 +496,7 @@ const EXAMPLE_QUERIES = [
 SELECT ?type (COUNT(DISTINCT ?e) AS ?count)
 WHERE {
   ?e rdf:type ?type .
-  FILTER(STRSTARTS(STR(?type), "http://lack.climatesense.kmi.tools/type/"))
+  FILTER(STRSTARTS(STR(?type), str(lack-type:)))
 }
 GROUP BY ?type
 ORDER BY DESC(?count)`
@@ -507,7 +508,7 @@ ORDER BY DESC(?count)`
 SELECT ?predicate (COUNT(*) AS ?count)
 WHERE {
   ?s ?predicate ?o .
-  FILTER(STRSTARTS(STR(?predicate), "https://purl.net/climatesense/lack/ns#"))
+  FILTER(STRSTARTS(STR(?predicate), str(lack:)))
   FILTER(?predicate != lack:Person && ?predicate != lack:Collective)
 }
 GROUP BY ?predicate
@@ -559,13 +560,13 @@ LIMIT 100`
 SELECT ?entity (MIN(?label) AS ?label) (COUNT(*) AS ?degree)
 WHERE {
   ?entity rdfs:label ?label .
-  FILTER(STRSTARTS(STR(?entity), "http://lack.climatesense.kmi.tools/entity/"))
+  FILTER(STRSTARTS(STR(?entity), str(entity:)))
   {
     ?entity ?p ?o .
-    FILTER(STRSTARTS(STR(?p), "http://lack.climatesense.kmi.tools/ontology/"))
+    FILTER(STRSTARTS(STR(?p), str(lack:)))
   } UNION {
     ?s ?p ?entity .
-    FILTER(STRSTARTS(STR(?p), "http://lack.climatesense.kmi.tools/ontology/"))
+    FILTER(STRSTARTS(STR(?p), str(lack:)))
   }
 }
 GROUP BY ?entity
@@ -600,7 +601,7 @@ WHERE {
   OPTIONAL { ?stmt lack:until ?until }
   ?subject rdfs:label ?subjectLabel .
   ?object rdfs:label ?objectLabel .
-  FILTER(STRSTARTS(STR(?predicate), "http://lack.climatesense.kmi.tools/ontology/"))
+  FILTER(STRSTARTS(STR(?predicate), str(lack:)))
 }
 ORDER BY ?subjectLabel
 LIMIT 50`
@@ -743,8 +744,8 @@ function shortIRI(iri) {
   if (!iri) return '';
   return iri
     .replace('https://purl.net/climatesense/lack/ns#', 'lack:')
-    .replace('http://lack.climatesense.kmi.tools/entity/', 'lack-entity:…')
-    .replace('http://lack.climatesense.kmi.tools/type/', 'lack-type:')
+    .replace('https://purl.net/climatesense/lack/entity/', 'lack-entity:…')
+    .replace('https://purl.net/climatesense/lack/type/', 'lack-type:')
     .replace('http://www.w3.org/2002/07/owl#', 'owl:')
     .replace('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:')
     .replace('http://www.w3.org/2000/01/rdf-schema#', 'rdfs:')

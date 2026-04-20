@@ -470,8 +470,8 @@ code { font-family: monospace; background: #f0ede3; padding: 0.1em 0.35em; borde
 // ══════════════════════════════════════════════════════════
 
 const PREFIXES = `PREFIX lack:        <https://purl.net/climatesense/lack/ns#>
-PREFIX lack-entity: <http://lack.climatesense.kmi.tools/entity/>
-PREFIX lack-type:   <http://lack.climatesense.kmi.tools/type/>
+PREFIX lack-entity: <https://purl.net/climatesense/lack/entity/>
+PREFIX lack-type:   <https://purl.net/climatesense/lack/type/>
 PREFIX owl:         <http://www.w3.org/2002/07/owl#>
 PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs:        <http://www.w3.org/2000/01/rdf-schema#>
@@ -1201,12 +1201,12 @@ ORDER BY ?pred ?targetLabel
 LIMIT 200`);
 
     const rIn = await sparqlQuery(`${PREFIXES}
-SELECT ?pred ?source (MIN(?sourceLabel) AS ?sourceLabel) (MIN(?src) AS ?src)
+SELECT ?pred ?source (MIN(?sourceLabell) AS ?sourceLabel) (MIN(?src) AS ?src)
 WHERE {
   ?source ?pred <${iri}> .
-  FILTER(STRSTARTS(STR(?pred), "http://lack.climatesense.kmi.tools/ontology/"))
-  FILTER(STRSTARTS(STR(?source), "http://lack.climatesense.kmi.tools/entity/"))
-  OPTIONAL { ?source rdfs:label ?sourceLabel }
+  FILTER(STRSTARTS(STR(?pred), STR(lack:)))
+  FILTER(STRSTARTS(STR(?source), STR(entity:)))
+  OPTIONAL { ?source rdfs:label ?sourceLabell }
   OPTIONAL { ?source rdfs:seeAlso ?src }
 }
 GROUP BY ?pred ?source

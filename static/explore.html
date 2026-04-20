@@ -882,8 +882,7 @@ SELECT (COUNT(DISTINCT ?e) AS ?n) WHERE {
 
   const r6 = await sparqlQuery(`${PREFIXES}
 SELECT (MIN(?y) AS ?minY) (MAX(?y) AS ?maxY) WHERE {
-  { ?e lack:activeSince ?y } UNION { ?e lack:activeUntil ?y }
-  UNION { ?stmt lack:since ?y } UNION { ?stmt lack:until ?y }
+  ?s (lack:since|lack:until|lack:activeFrom|lack:activeUntil) ?y .
 }`);
   const b6 = r6.results.bindings[0];
   if (b6?.minY && b6?.maxY) {
@@ -894,8 +893,8 @@ SELECT (MIN(?y) AS ?minY) (MAX(?y) AS ?maxY) WHERE {
 async function loadTypeChart() {
   const r = await sparqlQuery(`${PREFIXES}
 SELECT ?type (COUNT(DISTINCT ?e) AS ?count) WHERE {
-  ?e rdf:type ?type .
-  FILTER(STRSTARTS(STR(?type), "http://lack.climatesense.kmi.tools/type/"))
+?e rdf:type ?type .
+FILTER(STRSTARTS(STR(?type), STR(lack:)))
 }
 GROUP BY ?type
 ORDER BY DESC(?count)
@@ -919,10 +918,10 @@ LIMIT 15`);
 async function loadRelChart() {
   const r = await sparqlQuery(`${PREFIXES}
 SELECT ?predicate (COUNT(*) AS ?count) WHERE {
-  ?s ?predicate ?o .
-  FILTER(STRSTARTS(STR(?predicate), "http://lack.climatesense.kmi.tools/ontology/"))
-  FILTER(?predicate != lack:since && ?predicate != lack:until
-      && ?predicate != lack:activeSince && ?predicate != lack:activeUntil)
+?s ?predicate ?o .
+FILTER(STRSTARTS(STR(?predicate), STR(lack:)))
+FILTER(?predicate != lack:since && ?predicate != lack:until
+    && ?predicate != lack:activeSince && ?predicate != lack:activeUntil)
 }
 GROUP BY ?predicate
 ORDER BY DESC(?count)
@@ -972,21 +971,22 @@ ORDER BY DESC(?count)`);
 
 async function loadTopConnected() {
   const r = await sparqlQuery(`${PREFIXES}
-SELECT ?entity (MIN(?label) AS ?label) (COUNT(*) AS ?degree)
+SELECT ?entity (SAMPLE(?la) as ?label) (COUNT(*) AS ?degree)
 WHERE {
-  ?entity rdfs:label ?label .
-  FILTER(STRSTARTS(STR(?entity), "http://lack.climatesense.kmi.tools/entity/"))
-  {
-    ?entity ?p ?o .
-    FILTER(STRSTARTS(STR(?p), "http://lack.climatesense.kmi.tools/ontology/"))
-  } UNION {
-    ?s ?p ?entity .
-    FILTER(STRSTARTS(STR(?p), "http://lack.climatesense.kmi.tools/ontology/"))
-  }
+?entity rdfs:label ?la .
+FILTER(STRSTARTS(STR(?entity), STR(entity:)))
+{
+  ?entity ?p ?o .
+  FILTER(STRSTARTS(STR(?p), STR(lack:)))
+} UNION {
+  ?s ?p ?entity .
+  FILTER(STRSTARTS(STR(?p), STR(lack:)))
+}
 }
 GROUP BY ?entity
 ORDER BY DESC(?degree)
-LIMIT 10`);
+LIMIT 10
+`);
 
   const el = document.getElementById('top-connected');
   if (!r.results.bindings.length) { el.innerHTML = '<span class="empty">No data</span>'; return; }
@@ -1013,8 +1013,8 @@ async function loadTypes() {
 
   const r = await sparqlQuery(`${PREFIXES}
 SELECT ?type (COUNT(DISTINCT ?e) AS ?count) WHERE {
-  ?e rdf:type ?type .
-  FILTER(STRSTARTS(STR(?type), "http://lack.climatesense.kmi.tools/type/"))
+?e rdf:type ?type .
+FILTER(STRSTARTS(STR(?type), STR(lack:)))
 }
 GROUP BY ?type
 ORDER BY DESC(?count)`);
@@ -1056,12 +1056,12 @@ async function selectType(iri, name) {
   panel.innerHTML = `<div class="msg info"><span class="spinner"></span>Loading ${name} entities…</div>`;
 
   const r = await sparqlQuery(`${PREFIXES}
-SELECT ?entity (MIN(?label) AS ?label) (MIN(?wd) AS ?wd) (MIN(?source) AS ?source)
+SELECT ?entity (MIN(?la) AS ?label) (MIN(?wid) AS ?wd) (MIN(?sou) AS ?source)
 WHERE {
   ?entity rdf:type <${iri}> .
-  ?entity rdfs:label ?label .
-  OPTIONAL { ?entity owl:sameAs ?wd . FILTER(STRSTARTS(STR(?wd), "https://www.wikidata.org/")) }
-  OPTIONAL { ?entity rdfs:seeAlso ?source }
+  ?entity rdfs:label ?la .
+  OPTIONAL { ?entity owl:sameAs ?wid . FILTER(STRSTARTS(STR(?wid), "http://www.wikidata.org/")) }
+  OPTIONAL { ?entity rdfs:seeAlso ?sou }
 }
 GROUP BY ?entity
 ORDER BY ?label`);
@@ -1111,10 +1111,10 @@ async function entitySearch() {
   resultsEl.innerHTML = '<span class="spinner"></span> Searching…';
 
   const r = await sparqlQuery(`${PREFIXES}
-SELECT ?entity (MIN(?label) AS ?label) (MIN(?typeIRI) AS ?typeIRI)
+SELECT ?entity (MIN(?la) AS ?label) (MIN(?typeIRI) AS ?typeIRI)
 WHERE {
-  ?entity rdfs:label ?label .
-  FILTER(CONTAINS(LCASE(?label), "${q.toLowerCase().replace(/"/g, '')}"))
+  ?entity rdfs:label ?la .
+  FILTER(CONTAINS(LCASE(?la), "${q.toLowerCase().replace(/"/g, '')}"))
   OPTIONAL {
     ?entity rdf:type ?typeIRI .
     FILTER(STRSTARTS(STR(?typeIRI), "http://lack.climatesense.kmi.tools/type/"))
@@ -1179,21 +1179,21 @@ SELECT ?p ?o WHERE {
 ORDER BY ?p`);
 
     const rOut = await sparqlQuery(`${PREFIXES}
-SELECT ?pred ?target (MIN(?targetLabel) AS ?targetLabel) (MIN(?src) AS ?src)
-       (MIN(?since) AS ?since) (MIN(?until) AS ?until)
+SELECT ?pred ?target (MIN(?targetLabell) AS ?targetLabel) (MIN(?srcc) AS ?src)
+       (MIN(?sincee) AS ?since) (MIN(?untill) AS ?until)
 WHERE {
-  <${iri}> ?pred ?target .
-  FILTER(STRSTARTS(STR(?pred), "http://lack.climatesense.kmi.tools/ontology/"))
-  FILTER(STRSTARTS(STR(?target), "http://lack.climatesense.kmi.tools/entity/"))
-  OPTIONAL { ?target rdfs:label ?targetLabel }
-  OPTIONAL { ?target rdfs:seeAlso ?src }
-  OPTIONAL {
-    ?stmt rdf:type rdf:Statement ;
-          rdf:subject <${iri}> ;
-          rdf:predicate ?pred ;
-          rdf:object ?target .
-    OPTIONAL { ?stmt lack:since ?since }
-    OPTIONAL { ?stmt lack:until ?until }
+	<${iri}> ?pred ?target .
+	FILTER(STRSTARTS(STR(?pred), STR(lack:)))
+	FILTER(STRSTARTS(STR(?target), STR(entity:)))
+	OPTIONAL { ?target rdfs:label ?targetLabell }
+	OPTIONAL { ?target rdfs:seeAlso ?srcc }
+	OPTIONAL {
+	  ?stmt rdf:type rdf:Statement ;
+	        rdf:subject [] ;
+	        rdf:predicate ?pred ;
+	        rdf:object ?target .
+	  OPTIONAL { ?stmt lack:since ?sincee }
+	  OPTIONAL { ?stmt lack:until ?untill }
   }
 }
 GROUP BY ?pred ?target

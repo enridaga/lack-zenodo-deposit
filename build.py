@@ -207,17 +207,19 @@ def query_kg_sparql(kg_path):
     year_q = """
     PREFIX lack: <https://purl.net/climatesense/lack/ns#>
     PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
-    SELECT (MIN(?y) AS ?minY) (MAX(?y) AS ?maxY) WHERE {
+    SELECT ?y WHERE {
       ?s ?p ?y .
       FILTER(?p IN (lack:since, lack:until, lack:activeSince, lack:activeUntil))
       FILTER(DATATYPE(?y) = xsd:gYear)
     }
     """
-    year_range = (None, None)
+    years = []
     for row in g.query(year_q):
-        if row.minY and row.maxY:
-            year_range = (str(row.minY)[:4], str(row.maxY)[:4])
-
+        try:
+            years.append(int(str(row.y)[:4]))
+        except ValueError:
+            pass
+    year_range = (str(min(years)), str(max(years))) if years else (None, None)
     # ── Query 3: Entity counts per lack-type subtype ───────────────────────────
     subtype_q = """
     PREFIX lack-type: <https://purl.net/climatesense/lack/type/>

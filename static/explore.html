@@ -518,10 +518,10 @@ LIMIT 100`
     title: 'Most connected entities',
     desc: 'Entities with the most in+out relations (one row per entity)',
     query: `${PREFIXES}
-SELECT ?entity (MIN(?label) AS ?label) (COUNT(*) AS ?degree)
+SELECT ?entity (MIN(?labell) AS ?label) (COUNT(*) AS ?degree)
 FROM <https://purl.net/climatesense/lack>	
 WHERE {
-  ?entity rdfs:label ?label .
+  ?entity rdfs:label ?labell .
   FILTER(STRSTARTS(STR(?entity), str(entity:)))
   {
     ?entity ?p ?o .
@@ -539,10 +539,10 @@ LIMIT 20`
     title: 'Entities linked to Wikidata',
     desc: 'Entities with a Wikidata identifier (one row per entity)',
     query: `${PREFIXES}
-SELECT ?entity (MIN(?label) AS ?label) (MIN(?wd) AS ?wd)
+SELECT ?entity (MIN(?labell) AS ?label) (MIN(?wd) AS ?wd)
 FROM <https://purl.net/climatesense/lack>	
 WHERE {
-  ?entity rdfs:label ?label .
+  ?entity rdfs:label ?labell .
   ?entity owl:sameAs ?wd .
   FILTER(STRSTARTS(STR(?wd), "https://www.wikidata.org/entity/"))
 }
@@ -574,13 +574,13 @@ LIMIT 50`
     title: 'Think tanks and their funders',
     desc: 'Which think tanks are funded by whom?',
     query: `${PREFIXES}
-SELECT (MIN(?tankLabel) AS ?tankLabel) (MIN(?funderLabel) AS ?funderLabel)
+SELECT (MIN(?tankLabell) AS ?tankLabel) (MIN(?funderLabell) AS ?funderLabel)
 FROM <https://purl.net/climatesense/lack>	
 WHERE {
   ?tank rdf:type lack-type:think_tank .
   ?tank lack:fundedBy ?funder .
-  ?tank rdfs:label ?tankLabel .
-  ?funder rdfs:label ?funderLabel .
+  ?tank rdfs:label ?tankLabell .
+  ?funder rdfs:label ?funderLabell .
 }
 GROUP BY ?tank ?funder
 ORDER BY ?tankLabel`
@@ -589,11 +589,11 @@ ORDER BY ?tankLabel`
     title: 'Persons by source (Desmog)',
     desc: 'Persons whose profiles come from Desmog',
     query: `${PREFIXES}
-SELECT (MIN(?label) AS ?label) (MIN(?source) AS ?source)
+SELECT (MIN(?labell) AS ?label) (MIN(?source) AS ?source)
 FROM <https://purl.net/climatesense/lack>	
 WHERE {
   ?p rdf:type lack:Person .
-  ?p rdfs:label ?label .
+  ?p rdfs:label ?labell .
   ?p rdfs:seeAlso ?source .
   FILTER(CONTAINS(STR(?source), "desmog.com"))
 }
@@ -619,10 +619,10 @@ ORDER BY ?parentLabel`
     title: 'Active entities in a year range',
     desc: 'Entities active between 2010 and 2020',
     query: `${PREFIXES}
-SELECT ?entity (MIN(?label) AS ?label) (MIN(?since) AS ?since) (MIN(?until) AS ?until)
+SELECT ?entity (MIN(?labell) AS ?label) (MIN(?since) AS ?since) (MIN(?until) AS ?until)
 FROM <https://purl.net/climatesense/lack>	
 WHERE {
-  ?entity rdfs:label ?label .
+  ?entity rdfs:label ?labell .
   OPTIONAL { ?entity lack:activeSince ?since }
   OPTIONAL { ?entity lack:activeUntil ?until }
   FILTER(?since >= "2010"^^xsd:gYear && ?until <= "2020"^^xsd:gYear)

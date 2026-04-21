@@ -958,7 +958,7 @@ async function loadRelChart() {
     sparqlQuery(`${PREFIXES}
 SELECT ?predicate (COUNT(*) AS ?count) FROM <https://purl.net/climatesense/lack> WHERE {
 ?s ?predicate ?o .
-#FILTER(STRSTARTS(STR(?predicate), STR(lack:)))
+FILTER(STRSTARTS(STR(?predicate), STR(lack:)))
 #FILTER(?predicate != lack:since && ?predicate != lack:until
 #    && ?predicate != lack:activeSince && ?predicate != lack:activeUntil)
 }

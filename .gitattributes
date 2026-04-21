@@ -1,2 +1,5 @@
 *.ttl filter=lfs diff=lfs merge=lfs -text
+paths-annotated.csv filter=lfs diff=lfs merge=lfs -text
+LACK[[:space:]]Ontology[[:space:]]Engineering[[:space:]]-[[:space:]]alignment.csv filter=lfs diff=lfs merge=lfs -text
+paths-added.csv filter=lfs diff=lfs merge=lfs -text
 KG-inferred.ttl filter=lfs diff=lfs merge=lfs -text

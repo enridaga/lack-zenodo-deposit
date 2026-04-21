@@ -540,12 +540,12 @@ LIMIT 20`
     title: 'Entities linked to Wikidata',
     desc: 'Entities with a Wikidata identifier (one row per entity)',
     query: `${PREFIXES}
-SELECT ?entity (MIN(?labell) AS ?label) (MIN(?wd) AS ?wd)
+SELECT ?entity (MIN(?labell) AS ?label) (MIN(?wdd) AS ?wd)
 FROM <https://purl.net/climatesense/lack>	
 WHERE {
   ?entity rdfs:label ?labell .
-  ?entity owl:sameAs ?wd .
-  FILTER(STRSTARTS(STR(?wd), "https://www.wikidata.org/entity/"))
+  ?entity owl:sameAs ?wdd .
+  FILTER(STRSTARTS(STR(?wdd), "https://www.wikidata.org/entity/"))
 }
 GROUP BY ?entity
 ORDER BY ?label

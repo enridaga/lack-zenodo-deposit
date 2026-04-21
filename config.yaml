@@ -11,5 +11,7 @@ nav:
     file: "ontology.md"
   - label: "Download"
     file: "download.md"
+  - label: "Case Studies"
+    file: "case-studies.md"
   - label: "Explore"
     url: "static/explore.html"

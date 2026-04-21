@@ -27,6 +27,11 @@ CONFIG_FILE  = os.path.join(ROOT, "config.yaml")
 OUTPUT_DIR   = os.path.join(ROOT, "_site")
 KG_FILE      = os.path.join(ROOT, "KG.ttl")
 KGSTATS_FILE = os.path.join(ROOT, "KGSTATS.md")
+CS_TTL_FILE  = os.path.join(ROOT, "case-studies.ttl")
+CS_CONTENT_DIR = os.path.join(ROOT, "content", "case-study")
+CS_OUTPUT_DIR  = os.path.join(ROOT, "_site", "case-study")
+
+EXPLORE_BASE = "https://climatesense-project.eu/lack/static/explore.html"
 
 # Extra files to copy verbatim into _site root
 VERBATIM_FILES = ["lack-ontology.ttl", "lack-ontology.omn", "KG.ttl"]
@@ -405,6 +410,249 @@ def render_page(template, content_html, page_title, nav_html, site_title, base_u
     return out
 
 
+# ── Case Study rendering ──────────────────────────────────────────────────────
+
+def load_case_studies_ttl(path):
+    """
+    Load case-studies.ttl and return a dict keyed by case study id (int).
+    Each value contains the path entities, labels, relations, and all
+    supporting rdf:Statement instances with their provenance.
+    """
+    if not os.path.exists(path):
+        print(f"  WARNING: {path} not found — case study pages will be skipped.")
+        return {}
+
+    print("  Loading case-studies.ttl...")
+    try:
+        from rdflib import Graph, Namespace, URIRef
+        from rdflib.namespace import RDF, RDFS, OWL
+    except ImportError:
+        print("  WARNING: rdflib not installed — case study pages will be skipped.")
+        return {}
+
+    CS_NS   = Namespace("https://purl.net/climatesense/lack/case-study/")
+    LACK    = Namespace("https://purl.net/climatesense/lack/ns#")
+    PROV    = Namespace("http://www.w3.org/ns/prov#")
+    DCT     = Namespace("http://purl.org/dc/terms/")
+
+    g = Graph()
+    g.parse(path, format="turtle")
+    print(f"    Loaded {len(g):,} triples.")
+
+    def label_of(uri):
+        for _, _, o in g.triples((uri, RDFS.label, None)):
+            return str(o)
+        return str(uri).split("/")[-1]
+
+    def rel_label_of(uri):
+        for _, _, o in g.triples((uri, RDFS.label, None)):
+            return str(o)
+        return str(uri).split("#")[-1].split("/")[-1]
+
+    def seeAlso_of(uri):
+        return [str(o) for _, _, o in g.triples((uri, RDFS.seeAlso, None))]
+
+    def sameAs_of(uri):
+        return [str(o) for _, _, o in g.triples((uri, OWL.sameAs, None))]
+
+    def explore_link(uri):
+        from urllib.parse import quote
+        return f"{EXPLORE_BASE}#entity={quote(str(uri), safe='')}"
+
+    def get_statements(subj, pred, obj):
+        """Find all rdf:Statement instances for a given triple."""
+        stmts = []
+        for s, _, _ in g.triples((None, RDF.type, RDF.Statement)):
+            s_subj = g.value(s, RDF.subject)
+            s_pred = g.value(s, RDF.predicate)
+            s_obj  = g.value(s, RDF.object)
+            if str(s_subj) == str(subj) and str(s_pred) == str(pred) and str(s_obj) == str(obj):
+                derived = [str(o) for _, _, o in g.triples((s, PROV.wasDerivedFrom, None))]
+                see     = [str(o) for _, _, o in g.triples((s, RDFS.seeAlso, None))]
+                source  = g.value(s, DCT.source)
+                since   = g.value(s, LACK.since)
+                until   = g.value(s, LACK["until"])
+                stmts.append({
+                    "uri":         str(s),
+                    "derivedFrom": derived,
+                    "seeAlso":     see,
+                    "source":      str(source)  if source else None,
+                    "since":       str(since)   if since  else None,
+                    "until":       str(until)   if until  else None,
+                })
+        return stmts
+
+    cases = {}
+    for cs_uri, _, _ in g.triples((None, RDF.type, CS_NS.CaseStudy)):
+        cs_id = int(str(cs_uri).split("-")[-1])
+        entity   = g.value(cs_uri, CS_NS.entity)
+        relation = g.value(cs_uri, CS_NS.relation)
+        proxy    = g.value(cs_uri, CS_NS.proxy)
+        relation1= g.value(cs_uri, CS_NS.relation1)
+        target   = g.value(cs_uri, CS_NS.target)
+
+        cases[cs_id] = {
+            "id":             cs_id,
+            "entity":         entity,
+            "entity_label":   label_of(entity),
+            "entity_explore": explore_link(entity),
+            "entity_seeAlso": seeAlso_of(entity),
+            "entity_sameAs":  sameAs_of(entity),
+            "relation":       relation,
+            "relation_label": rel_label_of(relation),
+            "proxy":          proxy,
+            "proxy_label":    label_of(proxy),
+            "proxy_explore":  explore_link(proxy),
+            "proxy_seeAlso":  seeAlso_of(proxy),
+            "proxy_sameAs":   sameAs_of(proxy),
+            "relation1":      relation1,
+            "relation1_label":rel_label_of(relation1),
+            "target":         target,
+            "target_label":   label_of(target),
+            "target_explore": explore_link(target),
+            "target_seeAlso": seeAlso_of(target),
+            "target_sameAs":  sameAs_of(target),
+            "hop1_stmts":     get_statements(entity, relation, proxy),
+            "hop2_stmts":     get_statements(proxy, relation1, target),
+        }
+
+    print(f"    Found {len(cases)} case studies.")
+    return cases
+
+
+def render_source_links(urls):
+    """Render a list of URLs as compact source links."""
+    if not urls:
+        return '<span class="no-source">—</span>'
+    links = []
+    for url in urls:
+        domain = url.replace("https://", "").replace("http://", "").split("/")[0]
+        links.append(f'<a href="{url}" target="_blank" rel="noopener" class="source-link">{domain}</a>')
+    return " ".join(links)
+
+
+def render_statements_table(stmts, subj_label, subj_explore, pred_label,
+                             obj_label, obj_explore):
+    """Render a table of rdf:Statement evidence for one hop."""
+    if not stmts:
+        return (
+            f'<p class="no-stmts">No reified statements found for '
+            f'<strong>{subj_label}</strong> → <em>{pred_label}</em> → '
+            f'<strong>{obj_label}</strong>.</p>'
+        )
+
+    rows = []
+    for s in stmts:
+        since = s["since"] or ""
+        until = s["until"] or ""
+        if since and until and since == until:
+            period = since
+        elif since and until:
+            period = f"{since}–{until}"
+        elif since:
+            period = f"from {since}"
+        elif until:
+            period = f"until {until}"
+        else:
+            period = "—"
+
+        # Prefer prov:wasDerivedFrom (full URLs), fall back to rdfs:seeAlso
+        source_urls = s["derivedFrom"] if s["derivedFrom"] else s["seeAlso"]
+        source_html = render_source_links(source_urls)
+
+        rows.append(
+            f'<tr>'
+            f'<td><a href="{subj_explore}" target="_blank">{subj_label}</a></td>'
+            f'<td><em>{pred_label}</em></td>'
+            f'<td><a href="{obj_explore}" target="_blank">{obj_label}</a></td>'
+            f'<td class="period">{period}</td>'
+            f'<td class="sources">{source_html}</td>'
+            f'</tr>'
+        )
+
+    return (
+        '<table class="evidence-table">'
+        '<thead><tr>'
+        '<th>Subject</th><th>Relation</th><th>Object</th>'
+        '<th>Period</th><th>Source(s)</th>'
+        '</tr></thead>'
+        '<tbody>' + "".join(rows) + '</tbody>'
+        '</table>'
+    )
+
+
+def render_entity_block(label, explore_url, see_also, same_as):
+    """Render a small entity info block with links."""
+    lines = [f'<div class="entity-block">']
+    lines.append(f'<a href="{explore_url}" class="entity-link" target="_blank">{label}</a>')
+    if same_as:
+        links = " ".join(
+            f'<a href="{u}" target="_blank" class="ext-link">{u.split("/")[-1]}</a>'
+            for u in same_as if "wikidata" in u or "dbpedia" in u
+        )
+        if links:
+            lines.append(f'<span class="same-as">{links}</span>')
+    lines.append('</div>')
+    return "".join(lines)
+
+
+def render_case_study_page(case):
+    """Build the full HTML content block for a case study page."""
+    e_block = render_entity_block(
+        case["entity_label"], case["entity_explore"],
+        case["entity_seeAlso"], case["entity_sameAs"]
+    )
+    p_block = render_entity_block(
+        case["proxy_label"], case["proxy_explore"],
+        case["proxy_seeAlso"], case["proxy_sameAs"]
+    )
+    t_block = render_entity_block(
+        case["target_label"], case["target_explore"],
+        case["target_seeAlso"], case["target_sameAs"]
+    )
+
+    path_html = (
+        f'<div class="cs-path">'
+        f'{e_block}'
+        f'<span class="cs-arrow"><span class="cs-rel">{case["relation_label"]}</span>&#8594;</span>'
+        f'{p_block}'
+        f'<span class="cs-arrow"><span class="cs-rel">{case["relation1_label"]}</span>&#8594;</span>'
+        f'{t_block}'
+        f'</div>'
+    )
+
+    n1 = len(case["hop1_stmts"])
+    n2 = len(case["hop2_stmts"])
+
+    hop1_table = render_statements_table(
+        case["hop1_stmts"],
+        case["entity_label"], case["entity_explore"],
+        case["relation_label"],
+        case["proxy_label"],  case["proxy_explore"],
+    )
+    hop2_table = render_statements_table(
+        case["hop2_stmts"],
+        case["proxy_label"],  case["proxy_explore"],
+        case["relation1_label"],
+        case["target_label"], case["target_explore"],
+    )
+
+    back_link = '<p><a href="../case-studies.html">&larr; All case studies</a></p>'
+
+    return f"""
+{back_link}
+<h1>Case Study {case['id']}</h1>
+{path_html}
+
+<h2>Supporting evidence</h2>
+<h3>Hop 1: {case['entity_label']} &rarr; {case['proxy_label']} <span class="stmt-count">({n1} statement{'s' if n1 != 1 else ''})</span></h3>
+{hop1_table}
+
+<h3>Hop 2: {case['proxy_label']} &rarr; {case['target_label']} <span class="stmt-count">({n2} statement{'s' if n2 != 1 else ''})</span></h3>
+{hop2_table}
+"""
+
+
 # ── Build ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -482,6 +730,50 @@ def main():
             f.write(page_html)
 
         print(f"  Built {md_file} → _site/{out_filename}")
+
+    # ── Case study pages ──────────────────────────────────────────────────────
+    case_data = load_case_studies_ttl(CS_TTL_FILE)
+
+    if case_data:
+        os.makedirs(CS_OUTPUT_DIR, exist_ok=True)
+
+        for md_file in sorted(os.listdir(CS_CONTENT_DIR)):
+            if not md_file.endswith(".md"):
+                continue
+
+            md_path = os.path.join(CS_CONTENT_DIR, md_file)
+            with open(md_path, encoding="utf-8") as f:
+                raw = f.read()
+
+            meta, _ = parse_frontmatter(raw)
+            cs_id = meta.get("case_study_id")
+            if cs_id is None or cs_id not in case_data:
+                print(f"  WARNING: no case study data for {md_file} (id={cs_id}), skipping.")
+                continue
+
+            case       = case_data[cs_id]
+            page_title = meta.get("title", f"Case Study {cs_id}")
+
+            # nav active slug — mark "Case Studies" as active for all sub-pages
+            nav_html     = build_nav(nav_items, base_url, "case-studies")
+            content_html = render_case_study_page(case)
+            content_html = content_html.replace("{{ base_url }}", base_url)
+
+            page_html = render_page(
+                template, content_html, page_title, nav_html, site_title, base_url
+            )
+            # Fix asset paths: case-study pages are one level deeper
+            page_html = page_html.replace(
+                f'href="{base_url}/static/',
+                f'href="{base_url}/static/'
+            )
+
+            out_filename = slug_from_filename(md_file) + ".html"
+            out_path     = os.path.join(CS_OUTPUT_DIR, out_filename)
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(page_html)
+
+            print(f"  Built case-study/{md_file} → _site/case-study/{out_filename}")
 
     print(f"\nDone. Site written to {OUTPUT_DIR}/")
 

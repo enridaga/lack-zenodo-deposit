@@ -701,10 +701,18 @@ async function sparqlQuery(query) {
   const res = await fetch(url.toString(), {
     headers: { 'Accept': 'application/sparql-results+json' }
   });
-
+  
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`HTTP ${res.status}: ${res.statusText}\n${body}`);
+    let detail;
+    try {
+      const parsed = JSON.parse(body);
+      detail = parsed.exception || parsed.message || JSON.stringify(parsed, null, 2);
+      if (parsed.status) detail = `${parsed.status}: ${detail}`;
+    } catch {
+      detail = body;
+    }
+    throw new Error(`HTTP ${res.status}: ${res.statusText}\n${detail}`);
   }
   const json = await res.json();
   return json;

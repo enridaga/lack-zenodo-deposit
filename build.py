@@ -30,6 +30,7 @@ KGSTATS_FILE = os.path.join(ROOT, "KGSTATS.md")
 
 # Extra files to copy verbatim into _site root
 VERBATIM_FILES = ["lack-ontology.ttl", "lack-ontology.omn", "KG.ttl"]
+SHOW_TEMPORAL_COVERAGE = False
 
 # ── KGSTATS.md parsing ─────────────────────────────────────────────────────────
 
@@ -315,10 +316,10 @@ def render_stats_html(kg_placeholders, sparql_stats):
       <span class="stat-number">{wikidata_total:,}</span>
       <span class="stat-label">Wikidata links</span>
     </div>
-    <div class="stat-card">
+{"" if not SHOW_TEMPORAL_COVERAGE else f'''<div class="stat-card">
       <span class="stat-number">{year_str}</span>
       <span class="stat-label">temporal coverage</span>
-    </div>
+    </div>'''}
   </div>
 
   <div class="chart-grid">

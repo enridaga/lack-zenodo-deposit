@@ -306,7 +306,7 @@ code { font-family: monospace; background: #f7fbf7; padding: 0.1em 0.35em; borde
         <div class="stat-card"><div class="num" id="sc-collectives">—</div><div class="lbl">Collectives</div></div>
         <div class="stat-card"><div class="num" id="sc-relations">—</div><div class="lbl">Relations</div></div>
         <div class="stat-card"><div class="num" id="sc-wikidata">—</div><div class="lbl">Wikidata links</div></div>
-        <div class="stat-card"><div class="num" id="sc-years">—</div><div class="lbl">Temporal span</div></div>
+        <div class="stat-card" id="sc-years-card" style="display:none"><div class="num" id="sc-years">—</div><div class="lbl">Temporal span</div></div>
       </div>
       <div id="stats-loading" class="msg info" style="display:none"><span class="spinner"></span>Loading statistics…</div>
       <div id="stats-error" style="display:none"></div>
@@ -424,7 +424,7 @@ code { font-family: monospace; background: #f7fbf7; padding: 0.1em 0.35em; borde
 // ══════════════════════════════════════════════════════════
 // CONSTANTS & PREFIXES
 // ══════════════════════════════════════════════════════════
-
+const SHOW_TEMPORAL = false;
 const PREFIXES = `PREFIX lack:        <https://purl.net/climatesense/lack/ns#>
 PREFIX lack-entity: <https://purl.net/climatesense/lack/entity/>
 PREFIX entity: <https://purl.net/climatesense/lack/entity/>
@@ -854,14 +854,17 @@ SELECT (COUNT(DISTINCT ?e) AS ?n) FROM <https://purl.net/climatesense/lack> WHER
 }`);
   document.getElementById('sc-wikidata').textContent = fmtNum(sparqlVal(r5.results.bindings[0]?.n));
 
-  const r6 = await sparqlQuery(`${PREFIXES}
-SELECT (MIN(?y) AS ?minY) (MAX(?y) AS ?maxY) FROM <https://purl.net/climatesense/lack> WHERE {
-  ?s (lack:since|lack:until|lack:activeFrom|lack:activeUntil) ?y . FILTER( STR(xsd:int(STR(?y))) = STR(?y) ) 
-}`);
-  const b6 = r6.results.bindings[0];
-  if (b6?.minY && b6?.maxY) {
-    document.getElementById('sc-years').textContent = `${b6.minY.value}–${b6.maxY.value}`;
-  }
+  if (SHOW_TEMPORAL) {
+      document.getElementById('sc-years-card').style.display = '';
+      const r6 = await sparqlQuery(`${PREFIXES}
+  SELECT (MIN(?y) AS ?minY) (MAX(?y) AS ?maxY) FROM <https://purl.net/climatesense/lack> WHERE {
+    ?s (lack:since|lack:until|lack:activeFrom|lack:activeUntil) ?y . FILTER( STR(xsd:int(STR(?y))) = STR(?y) ) 
+  }`);
+      const b6 = r6.results.bindings[0];
+      if (b6?.minY && b6?.maxY) {
+        document.getElementById('sc-years').textContent = `${b6.minY.value}–${b6.maxY.value}`;
+      }
+    }
 }
 
 async function loadTypeChart() {

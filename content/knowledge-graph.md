@@ -4,7 +4,7 @@ title: Knowledge Graph
 
 # The LACK Knowledge Graph
 
-The LACK knowledge graph (v1.0, released 9 April 2026) is constructed through a three-phase pipeline of ontology alignment, entity URI generation, and relation graph construction, applied to relation extraction datasets from two investigative journalism sources covering climate lobbying.
+The LACK knowledge graph is constructed through a three-phase pipeline of relation extraction from web pages, ontology alignment, entity URI generation, and relation graph construction, applied to relation extraction datasets from two investigative journalism sources covering climate lobbying.
 
 ---
 

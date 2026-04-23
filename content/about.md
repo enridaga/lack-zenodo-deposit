@@ -42,12 +42,12 @@ LACK is built primarily from two investigative sources:
 | Source | Coverage |
 |---|---|
 | [Desmog](https://www.desmog.com/) | 943 person and organisation profile pages |
-| [LobbyMap / InfluenceMap](https://lobbymap.org/) | 964 entries (league table) + 338 scraped |
+| [LobbyMap / InfluenceMap](https://lobbymap.org/) | 964 entries (league table) + 338 linked by |
 
-Additional candidate sources under consideration include: SourceWatch, the Climate Policy Database, Hot Air (Tortoise Media), Climate Files (Center for Climate Integrity), Eco-Bot.Net, and the Climate Litigation Database (Sabin Center).
+Additional candidate sources are under consideration. 
 
 ---
 
 ## Status
 
-LACK is an active research project. Version 1.0 of the knowledge graph was released on 9 April 2026, comprising 38,584 entities and 65,992 asserted relations (264,516 after inferencing). The project is targeting a resource paper submission to [ISWC 2026](https://iswc2026.semanticweb.org/).
+LACK is an active research project. Version 1.0 of the knowledge graph was released on 9 April 2026, comprising. The project is currently a resource paper submission to [ISWC 2026](https://iswc2026.semanticweb.org/).

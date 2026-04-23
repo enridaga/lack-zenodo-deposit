@@ -15,25 +15,35 @@ https://purl.net/climatesense/lack/ns#Collective,17604,5369,5210
 Relation counts:
 
 count
-47782
+317989
 
 Relation breakdown:
 
 relation,count
-https://purl.net/climatesense/lack/ns#memberOf,13427
+http://www.w3.org/2002/07/owl#sameAs,103881
+https://purl.net/climatesense/lack/ns#associatedWith,91219
+https://purl.net/climatesense/lack/ns#hasMember,13456
+https://purl.net/climatesense/lack/ns#memberOf,13456
+https://purl.net/climatesense/lack/ns#employedBy,10638
+https://purl.net/climatesense/lack/ns#hasEmployee,10638
 https://purl.net/climatesense/lack/ns#contributedTo,6722
+https://purl.net/climatesense/lack/ns#hasContributor,6722
+https://purl.net/climatesense/lack/ns#hasLeader,5639
 https://purl.net/climatesense/lack/ns#leadsAt,5639
-https://purl.net/climatesense/lack/ns#employedBy,5463
 https://purl.net/climatesense/lack/ns#fundedBy,5210
-https://purl.net/climatesense/lack/ns#associatedWith,3216
+https://purl.net/climatesense/lack/ns#hasFunder,5210
+https://purl.net/climatesense/lack/ns#hasPartner,4842
 https://purl.net/climatesense/lack/ns#sponsored,3171
-https://purl.net/climatesense/lack/ns#hasPartner,2515
+https://purl.net/climatesense/lack/ns#wasSponsoredBy,3171
 https://purl.net/climatesense/lack/ns#derivedFrom,1922
-http://www.w3.org/2002/07/owl#sameAs,332
+https://purl.net/climatesense/lack/ns#hasDerivation,961
+https://purl.net/climatesense/lack/ns#activeSince,652
 https://purl.net/climatesense/lack/ns#founded,73
-https://purl.net/climatesense/lack/ns#hasMember,42
+https://purl.net/climatesense/lack/ns#wasFoundedBy,73
 https://purl.net/climatesense/lack/ns#acquired,37
+https://purl.net/climatesense/lack/ns#wasAcquiredBy,37
 https://purl.net/climatesense/lack/ns#organised,13
+https://purl.net/climatesense/lack/ns#wasOrganisedBy,13
 
 ### INFERRED 
 
@@ -86,7 +96,7 @@ https://purl.net/climatesense/lack/ns#Collective,17604,5369,5210
 Relation counts:
 
 count
-293395
+317989
 
 Relation breakdown:
 

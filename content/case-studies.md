@@ -4,7 +4,8 @@ title: Case Studies
 
 # Case Studies
 
-The following case studies illustrate paths between entities that were previously disconnected in the LACK Knowledge Graph. Each path was discovered by the graph's inference engine, revealing non-obvious connections between actors in the climate lobbying network.
+The following case studies illustrate connections that emerge from LACK's integration of multiple independent sources. Each case involves two statements drawn from different websites — no single source contains the full picture — whose combination reveals a relationship between entities that neither source makes explicit on its own.
+
 
 | # | Path | Angle |
 |---|------|-------|
